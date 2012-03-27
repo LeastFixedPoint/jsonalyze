@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+        <script>
+            function describe(value) {
+                if ($.isArray(value)) {
+                    var itemProperties = {}
+                    
+                    for (var index in value) {
+                        var itemValue = value[index]
+                        getProperties(itemValue, itemProperties)
+                    }
+                    
+                    return { type: "array", itemProperties: itemProperties, }
+                } else if (typeof value === 'string') {
+                    return { type: "string" }
+                } else if (typeof value === 'number') {
+                    return { type: "number" }
+                alert(typeof value)
+                } else {
+                    return { type: "object", properties: getProperties(value) }
+                }
+            }
+        
+            function getProperties(obj, _model) {
+                var model;
+                if (arguments.length == 1) { model = {} } else { model = _model }
+                 
+                for (var key in obj) {
+                    var value = obj[key]
+                    model[key] = describe(value)
+                }
+                
+                return model
+            }
+            
+            var render = {
+                object: function(descriptor, name) {
+                    var div = $('<div></div>').addClass('descriptor object')
+                        .append($('<span></span>').addClass('icon').html("{:}"))
+                        .append($('<span></span>').addClass('name').text(name))
+                    
+                    for (var property in descriptor.properties) {
+                        var propDescriptor = descriptor.properties[property]
+                        div.append(renderDescriptor(propDescriptor, property))
+                    }
+                    
+                    return div
+                },
+                array: function(descriptor, name) {
+                    var div = $('<div></div>').addClass('descriptor array')
+                        .append($('<span></span>').addClass('icon').html("[...]"))
+                        .append($('<span></span>').addClass('name').text(name))
+                    
+                    for (var property in descriptor.itemProperties) {
+                        var propDescriptor = descriptor.itemProperties[property]
+                        div.append(renderDescriptor(propDescriptor, property))
+                    }
+                    
+                    return div
+                },
+                string: function(descriptor, name) {
+                    var div = $('<div></div>').addClass('descriptor string')
+                        .append($('<span></span>').addClass('icon').html("«»"))
+                        .append($('<span></span>').addClass('name').text(name))
+                        
+                    return div
+                },
+                number: function(descriptor, name) {
+                    var div = $('<div></div>').addClass('descriptor number')
+                        .append($('<span></span>').addClass('icon').html("##"))
+                        .append($('<span></span>').addClass('name').text(name))
+                        
+                    return div
+                }
+            }
+            
+            function renderDescriptor(descriptor, name) {
+                return render[descriptor.type](descriptor, name)
+            }
+        
+            $(function() {
+                $('#submit').click(function() {
+                    var json = $('#json').val()
+                    var obj = $.parseJSON(json)
+                    var descriptor = describe(obj)
+                    
+                    var modelDiv = $('#model')
+                    modelDiv.empty()
+                    modelDiv.append(renderDescriptor(descriptor, ""))                  
+                })
+            })
+        </script>
+        <style>
+            .descriptor {
+                margin-top: 5px;
+                margin-bottom: 5px;
+                margin-left: 40px;
+            }
+            
+            .descriptor.string > .icon { background: #bbb; }
+            .descriptor.number> .icon { background: #bbb; }
+            .descriptor.array > .icon { background: #bbf; }
+            .descriptor.object > .icon { background: #fbb; }
+            
+            .descriptor > .icon {
+                display: inline-block;
+                width: 20px;
+                text-align: center;
+                border-right: 1px solid #888;
+                padding: 3px;
+            }
+            
+            .descriptor > .name {
+                display: inline-block;
+                background: #ddd;
+                color: black;
+                padding: 3px;
+            }
+            
+            #model > .descriptor {
+                margin-left: 0px;
+            }
+        </style>
+    </head>
+    <body>
+        <textarea id="json" rows="10" cols="300" style="width: 100%"></textarea>
+        
+        <button id="submit">
+            Submit
+        </button>
+        
+        <div id="model">
+                
+        </div>
+    </body>
+</html>
